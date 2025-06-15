@@ -1,0 +1,166 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #030008;
+  --foreground: #fffffe;
+  --primary: #7f5af0;
+  --secondary: #2cb67d;
+  --accent: #ff8906;
+  --muted: #72757e;
+  --card: #16161d;
+  --border: #383a47;
+}
+
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  color: var(--foreground);
+  background: var(--background);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  position: relative;
+}
+
+/* Región arrastrable para mover la ventana */
+.draggable-header {
+  -webkit-app-region: drag;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Los elementos interactivos no deben ser arrastrables */
+.draggable-header button,
+.draggable-header input,
+.draggable-header a,
+.draggable-header select,
+.draggable-header .no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* Fondo con gradiente radial morado hermoso */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 50% 50%, rgba(88, 28, 135, 0.45) 0%, rgba(17, 24, 39, 0) 80%),
+    radial-gradient(circle at 20% 80%, rgba(88, 28, 135, 0.35) 0%, rgba(17, 24, 39, 0) 60%),
+    radial-gradient(circle at 80% 20%, rgba(127, 90, 240, 0.3) 0%, rgba(17, 24, 39, 0) 60%),
+    radial-gradient(circle at 40% 40%, rgba(44, 182, 125, 0.2) 0%, rgba(17, 24, 39, 0) 70%),
+    var(--background);
+  z-index: -50;
+  pointer-events: none;
+}
+
+/* Custom scrollbar styles */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 8px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: rgba(22, 22, 29, 0.5);
+  border-radius: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: rgba(127, 90, 240, 0.5);
+  border-radius: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(127, 90, 240, 0.7);
+}
+
+/* Firefox scrollbar */
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(127, 90, 240, 0.5) rgba(22, 22, 29, 0.5);
+}
+
+/* Utility classes */
+.text-primary { color: var(--primary); }
+.text-secondary { color: var(--secondary); }
+.text-accent { color: var(--accent); }
+.text-muted { color: var(--muted); }
+.bg-primary { background-color: var(--primary); }
+.bg-secondary { background-color: var(--secondary); }
+.bg-accent { background-color: var(--accent); }
+.bg-card { background-color: var(--card); }
+.border-color { border-color: var(--border); }
+
+/* Background grid pattern */
+.bg-grid-background {
+  background-color: var(--background);
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)),
+    repeating-linear-gradient(to right, hsl(0, 0%, 20%) 0, hsl(0, 0%, 20%) 1px, transparent 1px, transparent 40px),
+    repeating-linear-gradient(to bottom, hsl(0, 0%, 20%) 0, hsl(0, 0%, 20%) 1px, transparent 1px, transparent 40px);
+}
+
+/* Animaciones */
+@keyframes pulse-glow {
+  0%, 100% { 
+    box-shadow: 0 0 5px rgba(127, 90, 240, 0.5);
+  }
+  50% { 
+    box-shadow: 0 0 20px rgba(127, 90, 240, 0.8);
+  }
+}
+
+/* Gradientes morados hermosos */
+.gradient-purple {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.gradient-purple-intense {
+  background: linear-gradient(135deg, #7f5af0 0%, #2cb67d 50%, #ff8906 100%);
+}
+
+.gradient-purple-soft {
+  background: linear-gradient(135deg, rgba(127, 90, 240, 0.2) 0%, rgba(44, 182, 125, 0.2) 50%, rgba(255, 137, 6, 0.2) 100%);
+}
+
+.gradient-border {
+  background: linear-gradient(135deg, #7f5af0, #2cb67d, #ff8906);
+  padding: 1px;
+  border-radius: 0.5rem;
+}
+
+.gradient-border-content {
+  background: var(--card);
+  border-radius: calc(0.5rem - 1px);
+}
+
+/* Inputs mejorados */
+.input-dark {
+  background: rgba(22, 22, 29, 0.8) !important;
+  border: 1px solid rgba(127, 90, 240, 0.3) !important;
+  color: #fffffe !important;
+  transition: all 0.3s ease !important;
+}
+
+.input-dark:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(127, 90, 240, 0.1) !important;
+  background: rgba(22, 22, 29, 0.95) !important;
+}
+
+.input-dark::placeholder {
+  color: rgba(114, 117, 126, 0.8) !important;
+}
+
+/* Select styles */
+.select-dark {
+  background: rgba(22, 22, 29, 0.8) !important;
+  border: 1px solid rgba(127, 90, 240, 0.3) !important;
+  color: #fffffe !important;
+}
+
+.select-dark option {
+  background: var(--card) !important;
+  color: #fffffe !important;
+}
