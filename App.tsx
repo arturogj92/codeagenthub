@@ -50,6 +50,7 @@ const loadFromStorage = (key: string, defaultValue: any) => {
 
 export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [activeView, setActiveView] = useState<'terminals' | 'kanban'>('terminals')
   const [terminals, setTerminals] = useState<Terminal[]>(() => 
     loadFromStorage('terminals', [
       { id: 1, name: 'Terminal 1', mode: 'interactive', status: 'inactive', output: ['Terminal inactivo. Crear sesión para comenzar.'] },
@@ -648,7 +649,38 @@ export default function App() {
                   <span>{tasks.filter(t => t.status === 'RUNNING').length} tareas ejecutándose</span>
                 </div>
               </div>
-              <div className="relative z-10 flex items-center space-x-4">
+              
+              {/* Navigation Menu */}
+              <div className="relative z-10 flex items-center space-x-2">
+                <div className="flex bg-card/60 backdrop-blur-sm rounded-lg p-1 border border-color/30">
+                  <button
+                    onClick={() => setActiveView('terminals')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                      activeView === 'terminals' 
+                        ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg' 
+                        : 'text-muted hover:text-white hover:bg-card/50'
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>Terminales</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveView('kanban')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                      activeView === 'kanban' 
+                        ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg' 
+                        : 'text-muted hover:text-white hover:bg-card/50'
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 0a2 2 0 012 2v6a2 2 0 01-2 2" />
+                    </svg>
+                    <span>Kanban</span>
+                  </button>
+                </div>
+                
                 <div className="text-sm text-muted">
                   Total: {tasks.length} tareas
                 </div>
@@ -656,163 +688,212 @@ export default function App() {
               </div>
             </header>
 
-            {/* Terminals Grid - Beautiful design */}
+            {/* Main Content Area - Conditional Rendering */}
             <div className="flex-1 p-6 min-h-0">
-              <div className="grid grid-cols-2 gap-6 h-full" style={{ height: '600px' }}>
-                {terminals.map(terminal => (
-                  <div key={terminal.id} className="gradient-border h-full">
-                    <div className="gradient-border-content bg-card/80 backdrop-blur-xl rounded-lg overflow-hidden flex flex-col h-full">
-                      {/* Terminal Header */}
-                      <div className="bg-card/60 backdrop-blur-sm px-4 py-3 flex items-center justify-between border-b border-color/30">
-                        <div className="flex items-center space-x-3">
-                          <div className="flex space-x-1">
-                            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                            <div className="w-3 h-3 bg-accent rounded-full"></div>
-                            <div className="w-3 h-3 bg-secondary rounded-full"></div>
-                          </div>
-                          <span className="text-sm font-medium text-white">{terminal.name}</span>
-                          <div className="px-2 py-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded text-xs border border-primary/30 flex items-center">
-                            <span className="text-primary mr-1">{getModeIcon(terminal.mode)}</span>
-                            {terminal.mode}
-                          </div>
-                          {terminal.sessionId && terminal.status !== 'inactive' && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault()
-                                e.stopPropagation()
-                                handleCycleClaudeMode(terminal.id)
-                              }}
-                              className="text-xs bg-gradient-to-r from-secondary to-accent px-3 py-1 rounded-lg hover:opacity-90 transition-all duration-200 text-white font-medium flex items-center"
-                              title="Cambiar modo de Claude (Shift+Tab)"
-                            >
-                              <span className="mr-1">
-                                {getClaudeModeInfo(terminal.claudeMode || 'default').icon}
-                              </span>
-                              Claude: {getClaudeModeInfo(terminal.claudeMode || 'default').name}
-                              <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                              </svg>
-                            </button>
-                          )}
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          {terminal.currentFile && (
-                            <span className="text-xs text-primary px-2 py-1 bg-primary/10 rounded border border-primary/30 flex items-center">
-                              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                              </svg>
-                              {terminal.currentFile}
-                            </span>
-                          )}
-                          {terminal.status === 'inactive' ? (
-                            <button
-                              onClick={() => handleCreateSession(terminal.id)}
-                              className="text-xs bg-gradient-to-r from-secondary to-primary px-3 py-1 rounded-lg hover:opacity-90 transition-all duration-200 text-white font-medium flex items-center"
-                            >
-                              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              Iniciar
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => handleStopSession(terminal.id)}
-                              className="text-xs bg-gradient-to-r from-red-500 to-red-600 px-3 py-1 rounded-lg hover:opacity-90 transition-all duration-200 text-white font-medium flex items-center"
-                            >
-                              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 10h6v4H9z" />
-                              </svg>
-                              Parar
-                            </button>
-                          )}
-                          <div className={`w-2 h-2 rounded-full ${getStatusColor(terminal.status)}`}></div>
-                        </div>
-                      </div>
-
-                      {/* Terminal Output */}
-                      <div className="flex-1 p-4 font-mono text-sm text-secondary overflow-y-auto bg-black/20 min-h-0" style={{ height: '400px', maxHeight: '400px' }}>
-                        {terminal.output.map((line, index) => (
-                          <div key={index} className="mb-1">{line}</div>
-                        ))}
-                        <div className="w-2 h-4 bg-secondary animate-pulse inline-block"></div>
-                      </div>
-
-                      {/* Terminal Input */}
-                      <div className="bg-card/60 backdrop-blur-sm p-3 border-t border-color/30">
-                        <TerminalInput 
-                          terminal={terminal}
-                          onSendPrompt={(prompt) => handleSendPrompt(terminal.id, prompt)}
-                          disabled={terminal.status === 'inactive'}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Compact Kanban - Beautiful design */}
-            <div className="h-64 bg-card/80 backdrop-blur-xl border-t border-color/30 p-4 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10"></div>
-              <div className="relative z-10 h-full flex flex-col">
-                <h3 className="font-semibold mb-3 text-white flex items-center">
-                  <div className="w-2 h-2 bg-accent rounded-full animate-pulse mr-2"></div>
-                  Estado de Tareas
-                </h3>
-                <div className="grid grid-cols-4 gap-4 flex-1 min-h-0">
-                  {[
-                    { 
-                      status: 'QUEUED', 
-                      label: 'En Cola', 
-                      color: 'from-muted to-muted', 
-                      icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    },
-                    { 
-                      status: 'RUNNING', 
-                      label: 'Ejecutando', 
-                      color: 'from-secondary to-primary', 
-                      icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                    },
-                    { 
-                      status: 'DONE', 
-                      label: 'Completado', 
-                      color: 'from-secondary to-accent', 
-                      icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    },
-                    { 
-                      status: 'ERROR', 
-                      label: 'Error', 
-                      color: 'from-red-500 to-red-600', 
-                      icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    }
-                  ].map(({ status, label, color, icon }) => (
-                    <div key={status} className="gradient-border h-full">
-                      <div className="gradient-border-content bg-card/60 backdrop-blur-sm rounded-lg p-3 h-full flex flex-col">
-                        <h4 className={`text-sm font-medium mb-2 flex items-center bg-gradient-to-r ${color} bg-clip-text text-transparent`}>
-                          <span className="mr-2">{icon}</span>
-                          {label}
-                        </h4>
-                        <div className="flex-1 space-y-2 overflow-y-auto min-h-0 max-h-40 scrollbar-thin scrollbar-thumb-primary/50 scrollbar-track-transparent">
-                          {tasks.filter(task => task.status === status).map(task => (
-                            <div key={task.id} className="p-2 bg-card/40 rounded border border-color/20 backdrop-blur-sm">
-                              <div className="truncate text-xs text-white font-medium">{task.title}</div>
-                              <div className="text-xs text-muted mt-1 flex items-center">
-                                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-                                </svg>
-                                Terminal {task.terminal}
-                              </div>
+              {activeView === 'terminals' ? (
+                /* Terminals Grid - Beautiful design */
+                <div className="grid grid-cols-2 gap-6 h-full" style={{ height: '600px' }}>
+                  {terminals.map(terminal => (
+                    <div key={terminal.id} className="gradient-border h-full">
+                      <div className="gradient-border-content bg-card/80 backdrop-blur-xl rounded-lg overflow-hidden flex flex-col h-full">
+                        {/* Terminal Header */}
+                        <div className="bg-card/60 backdrop-blur-sm px-4 py-3 flex items-center justify-between border-b border-color/30">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex space-x-1">
+                              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                              <div className="w-3 h-3 bg-accent rounded-full"></div>
+                              <div className="w-3 h-3 bg-secondary rounded-full"></div>
                             </div>
+                            <span className="text-sm font-medium text-white">{terminal.name}</span>
+                            <div className="px-2 py-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded text-xs border border-primary/30 flex items-center">
+                              <span className="text-primary mr-1">{getModeIcon(terminal.mode)}</span>
+                              {terminal.mode}
+                            </div>
+                            {terminal.sessionId && terminal.status !== 'inactive' && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  handleCycleClaudeMode(terminal.id)
+                                }}
+                                className="text-xs bg-gradient-to-r from-secondary to-accent px-3 py-1 rounded-lg hover:opacity-90 transition-all duration-200 text-white font-medium flex items-center"
+                                title="Cambiar modo de Claude (Shift+Tab)"
+                              >
+                                <span className="mr-1">
+                                  {getClaudeModeInfo(terminal.claudeMode || 'default').icon}
+                                </span>
+                                Claude: {getClaudeModeInfo(terminal.claudeMode || 'default').name}
+                                <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                              </button>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            {terminal.currentFile && (
+                              <span className="text-xs text-primary px-2 py-1 bg-primary/10 rounded border border-primary/30 flex items-center">
+                                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                {terminal.currentFile}
+                              </span>
+                            )}
+                            {terminal.status === 'inactive' ? (
+                              <button
+                                onClick={() => handleCreateSession(terminal.id)}
+                                className="text-xs bg-gradient-to-r from-secondary to-primary px-3 py-1 rounded-lg hover:opacity-90 transition-all duration-200 text-white font-medium flex items-center"
+                              >
+                                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Iniciar
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleStopSession(terminal.id)}
+                                className="text-xs bg-gradient-to-r from-red-500 to-red-600 px-3 py-1 rounded-lg hover:opacity-90 transition-all duration-200 text-white font-medium flex items-center"
+                              >
+                                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 10h6v4H9z" />
+                                </svg>
+                                Parar
+                              </button>
+                            )}
+                            <div className={`w-2 h-2 rounded-full ${getStatusColor(terminal.status)}`}></div>
+                          </div>
+                        </div>
+
+                        {/* Terminal Output */}
+                        <div className="flex-1 p-4 font-mono text-sm text-secondary overflow-y-auto bg-black/20 min-h-0" style={{ height: '400px', maxHeight: '400px' }}>
+                          {terminal.output.map((line, index) => (
+                            <div key={index} className="mb-1">{line}</div>
                           ))}
+                          <div className="w-2 h-4 bg-secondary animate-pulse inline-block"></div>
+                        </div>
+
+                        {/* Terminal Input */}
+                        <div className="bg-card/60 backdrop-blur-sm p-3 border-t border-color/30">
+                          <TerminalInput 
+                            terminal={terminal}
+                            onSendPrompt={(prompt) => handleSendPrompt(terminal.id, prompt)}
+                            disabled={terminal.status === 'inactive'}
+                          />
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
+              ) : (
+                /* Kanban Board - Full View */
+                <div className="h-full bg-card/80 backdrop-blur-xl rounded-lg border border-color/30 p-6 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10"></div>
+                  <div className="relative z-10 h-full flex flex-col">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-2xl font-bold text-white flex items-center">
+                        <svg className="w-8 h-8 mr-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 0a2 2 0 012 2v6a2 2 0 01-2 2" />
+                        </svg>
+                        Estado de Tareas
+                      </h3>
+                      <div className="flex items-center space-x-4 text-sm text-muted">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-accent rounded-full animate-pulse"></div>
+                          <span>Total: {tasks.length} tareas</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-secondary rounded-full animate-pulse"></div>
+                          <span>{tasks.filter(t => t.status === 'RUNNING').length} ejecutándose</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-4 gap-6 flex-1 min-h-0">
+                      {[
+                        { 
+                          status: 'QUEUED', 
+                          label: 'En Cola', 
+                          color: 'from-muted to-muted', 
+                          bgColor: 'bg-muted/10',
+                          icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        },
+                        { 
+                          status: 'RUNNING', 
+                          label: 'Ejecutando', 
+                          color: 'from-secondary to-primary', 
+                          bgColor: 'bg-secondary/10',
+                          icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        },
+                        { 
+                          status: 'DONE', 
+                          label: 'Completado', 
+                          color: 'from-secondary to-accent', 
+                          bgColor: 'bg-accent/10',
+                          icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        },
+                        { 
+                          status: 'ERROR', 
+                          label: 'Error', 
+                          color: 'from-red-500 to-red-600', 
+                          bgColor: 'bg-red-500/10',
+                          icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        }
+                      ].map(({ status, label, color, bgColor, icon }) => (
+                        <div key={status} className="gradient-border h-full">
+                          <div className={`gradient-border-content ${bgColor} backdrop-blur-sm rounded-lg p-4 h-full flex flex-col`}>
+                            <div className="flex items-center justify-between mb-4">
+                              <h4 className={`text-lg font-semibold flex items-center bg-gradient-to-r ${color} bg-clip-text text-transparent`}>
+                                <span className="mr-3">{icon}</span>
+                                {label}
+                              </h4>
+                              <span className={`px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r ${color} text-white`}>
+                                {tasks.filter(task => task.status === status).length}
+                              </span>
+                            </div>
+                            <div className="flex-1 space-y-3 overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-primary/50 scrollbar-track-transparent">
+                              {tasks.filter(task => task.status === status).map(task => (
+                                <div key={task.id} className="p-4 bg-card/40 rounded-lg border border-color/20 backdrop-blur-sm hover:bg-card/60 transition-all duration-200 cursor-pointer group">
+                                  <div className="text-sm text-white font-medium mb-2 group-hover:text-primary transition-colors">{task.title}</div>
+                                  <div className="flex items-center justify-between text-xs text-muted">
+                                    <div className="flex items-center">
+                                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                                      </svg>
+                                      Terminal {task.terminal}
+                                    </div>
+                                    <div className="flex items-center">
+                                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                      </svg>
+                                      {new Date(task.createdAt).toLocaleTimeString()}
+                                    </div>
+                                  </div>
+                                  {task.prompt && (
+                                    <div className="mt-2 text-xs text-muted/80 italic truncate" title={task.prompt}>
+                                      "{task.prompt}"
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                              {tasks.filter(task => task.status === status).length === 0 && (
+                                <div className="text-center text-muted text-sm py-8">
+                                  <div className="mb-2 flex justify-center opacity-50">
+                                    {icon}
+                                  </div>
+                                  <div>No hay tareas en {label.toLowerCase()}</div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
+
           </div>
         </div>
 
@@ -920,6 +1001,37 @@ export default function App() {
             </div>
           </div>
         )}
+
+        {/* Footer Task Status Bar */}
+        <div className="h-16 bg-card/80 backdrop-blur-xl border-t border-color/30 px-6 py-3 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10"></div>
+          <div className="relative z-10 h-full flex items-center justify-between">
+            <div className="flex items-center space-x-6">
+              {[
+                { status: 'QUEUED', label: 'En Cola', color: 'text-muted' },
+                { status: 'RUNNING', label: 'Ejecutando', color: 'text-secondary' },
+                { status: 'DONE', label: 'Completado', color: 'text-accent' },
+                { status: 'ERROR', label: 'Error', color: 'text-red-400' }
+              ].map(({ status, label, color }) => (
+                <div key={status} className="flex items-center space-x-2">
+                  <div className={`w-2 h-2 rounded-full bg-current ${color}`}></div>
+                  <span className={`text-sm ${color}`}>
+                    {label}: {tasks.filter(task => task.status === status).length}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => setActiveView(activeView === 'terminals' ? 'kanban' : 'terminals')}
+              className="text-sm text-muted hover:text-white transition-colors flex items-center space-x-2"
+            >
+              <span>{activeView === 'terminals' ? 'Ver detalles' : 'Ver terminales'}</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
 
       </div>
     </div>
