@@ -753,14 +753,14 @@ export default function App() {
             </div>
 
             {/* Compact Kanban - Beautiful design */}
-            <div className="h-48 bg-card/80 backdrop-blur-xl border-t border-color/30 p-4 relative overflow-hidden">
+            <div className="h-64 bg-card/80 backdrop-blur-xl border-t border-color/30 p-4 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10"></div>
-              <div className="relative z-10">
+              <div className="relative z-10 h-full flex flex-col">
                 <h3 className="font-semibold mb-3 text-white flex items-center">
                   <div className="w-2 h-2 bg-accent rounded-full animate-pulse mr-2"></div>
                   Estado de Tareas
                 </h3>
-                <div className="grid grid-cols-4 gap-4 h-full">
+                <div className="grid grid-cols-4 gap-4 flex-1 min-h-0">
                   {[
                     { 
                       status: 'QUEUED', 
@@ -793,7 +793,7 @@ export default function App() {
                           <span className="mr-2">{icon}</span>
                           {label}
                         </h4>
-                        <div className="flex-1 space-y-2 overflow-y-auto">
+                        <div className="flex-1 space-y-2 overflow-y-auto min-h-0 max-h-40 scrollbar-thin scrollbar-thumb-primary/50 scrollbar-track-transparent">
                           {tasks.filter(task => task.status === status).map(task => (
                             <div key={task.id} className="p-2 bg-card/40 rounded border border-color/20 backdrop-blur-sm">
                               <div className="truncate text-xs text-white font-medium">{task.title}</div>
