@@ -49,7 +49,6 @@ const loadFromStorage = (key: string, defaultValue: any) => {
 }
 
 export default function App() {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [activeView, setActiveView] = useState<'terminals' | 'kanban'>('terminals')
   const [terminals, setTerminals] = useState<Terminal[]>(() => 
     loadFromStorage('terminals', [
@@ -525,171 +524,64 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white" style={{ 
+    <div className="h-screen bg-gray-900 text-white flex flex-col" style={{ 
       background: 'radial-gradient(circle at 50% 50%, rgba(88, 28, 135, 0.45) 0%, rgba(17, 24, 39, 0) 80%), #030008'
     }}>
-      {/* Main Container with beautiful backdrop */}
-      <div className="relative min-h-screen">
+      {/* Header */}
+      <header className="h-16 bg-card/80 backdrop-blur-xl border-b border-color/30 flex items-center justify-between px-6 relative overflow-hidden flex-shrink-0">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-secondary/20 to-accent/20 opacity-50"></div>
+        <div className="relative z-10 flex items-center space-x-4">
+          <h1 className="text-xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+            CodeAgent Hub
+          </h1>
+          <div className="flex items-center space-x-2 text-sm text-muted">
+            <div className="w-2 h-2 bg-secondary rounded-full animate-pulse"></div>
+            <span>{tasks.filter(t => t.status === 'RUNNING').length} tareas ejecutándose</span>
+          </div>
+        </div>
         
-        {/* Main App Layout */}
-        <div className="flex h-screen">
-          {/* Sidebar with gradient border */}
-          <div 
-            className={`transition-all duration-300 ${
-              sidebarCollapsed ? 'w-16' : 'w-80'
-            } flex-shrink-0 h-full rounded-lg border border-purple-500/30`}
-            style={{
-              background: 'radial-gradient(circle at 30% 30%, rgba(127, 90, 240, 0.15) 0%, rgba(17, 24, 39, 0.8) 70%), rgba(22, 22, 29, 0.9)',
-              backdropFilter: 'blur(12px)'
-            }}
-          >
-              {/* Sidebar Header */}
-              <div className="p-4 border-b border-color/30 flex items-center justify-between">
-                {!sidebarCollapsed && (
-                  <h2 className="text-lg font-bold text-white">
-                    Control Panel
-                  </h2>
-                )}
-                <button
-                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                  className="p-2 rounded-lg hover:opacity-90 transition-all duration-200 shadow-lg bg-purple-600/80 hover:bg-purple-600/90"
-                >
-                  <svg className={`w-4 h-4 text-white transition-transform duration-300 ${sidebarCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-              </div>
-              
-              {!sidebarCollapsed && (
-                <div className="p-4 space-y-6">
-                  {/* Active Sessions */}
-                  <div>
-                    <h3 className="font-semibold mb-3 text-white flex items-center">
-                      <div className="w-2 h-2 bg-secondary rounded-full animate-pulse mr-2"></div>
-                      Sesiones Activas ({terminals.filter(t => t.status !== 'inactive').length})
-                    </h3>
-                    <div className="space-y-2">
-                      {terminals.filter(terminal => terminal.status !== 'inactive').length > 0 ? (
-                        terminals
-                          .filter(terminal => terminal.status !== 'inactive')
-                          .map(terminal => (
-                            <div key={terminal.id} className="gradient-border">
-                              <div className="gradient-border-content p-3 bg-card/60 backdrop-blur-sm">
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="text-white font-medium">{terminal.name}</span>
-                                  <span className={`w-2 h-2 rounded-full ${getStatusColor(terminal.status)}`}></span>
-                                </div>
-                                <div className="text-xs text-muted space-y-1">
-                                  <div className="flex items-center">
-                                    <span className="mr-2 text-primary">{getModeIcon(terminal.mode)}</span>
-                                    <span>{terminal.mode}</span>
-                                  </div>
-                                  {terminal.projectPath && (
-                                    <div className="truncate text-primary flex items-center">
-                                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                                      </svg>
-                                      {terminal.projectPath.split('/').pop()}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          ))
-                      ) : (
-                        <div className="text-center text-muted text-sm py-6 bg-card/30 rounded-lg border border-color/20">
-                          <div className="mb-2 flex justify-center">
-                            <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                            </svg>
-                          </div>
-                          <div>No hay sesiones activas.</div>
-                          <div className="text-xs mt-1">Crea una nueva sesión para comenzar.</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Controls */}
-                  <div>
-                    <h3 className="font-semibold mb-3 text-white">Controles</h3>
-                    <div className="space-y-2">
-                      <button 
-                        onClick={() => setShowNewSessionModal(true)}
-                        className="w-full p-3 bg-gradient-to-r from-secondary to-primary rounded-lg hover:opacity-90 transition-all duration-200 shadow-lg text-white font-medium flex items-center justify-center"
-                      >
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Nueva Sesión
-                      </button>
-                      <button className="w-full p-3 bg-gradient-to-r from-accent to-secondary rounded-lg hover:opacity-90 transition-all duration-200 shadow-lg text-white font-medium flex items-center justify-center">
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H9z" />
-                        </svg>
-                        Ver Métricas
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+        {/* Navigation Menu */}
+        <div className="relative z-10 flex items-center space-x-2">
+          <div className="flex bg-card/60 backdrop-blur-sm rounded-lg p-1 border border-color/30">
+            <button
+              onClick={() => setActiveView('terminals')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                activeView === 'terminals' 
+                  ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg' 
+                  : 'text-muted hover:text-white hover:bg-card/50'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span>Terminales</span>
+            </button>
+            <button
+              onClick={() => setActiveView('kanban')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                activeView === 'kanban' 
+                  ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg' 
+                  : 'text-muted hover:text-white hover:bg-card/50'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 0a2 2 0 012 2v6a2 2 0 01-2 2" />
+              </svg>
+              <span>Kanban</span>
+            </button>
+          </div>
+          
+          <div className="text-sm text-muted">
+            Total: {tasks.length} tareas
+          </div>
+          <div className="w-3 h-3 bg-primary rounded-full animate-pulse"></div>
+        </div>
+      </header>
 
-          {/* Main Content Area */}
-          <div className="flex-1 flex flex-col min-w-0">
-            {/* Header with beautiful gradient */}
-            <header className="h-16 bg-card/80 backdrop-blur-xl border-b border-color/30 flex items-center justify-between px-6 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-secondary/20 to-accent/20 opacity-50"></div>
-              <div className="relative z-10 flex items-center space-x-4">
-                <h1 className="text-xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-                  CodeAgent Hub
-                </h1>
-                <div className="flex items-center space-x-2 text-sm text-muted">
-                  <div className="w-2 h-2 bg-secondary rounded-full animate-pulse"></div>
-                  <span>{tasks.filter(t => t.status === 'RUNNING').length} tareas ejecutándose</span>
-                </div>
-              </div>
-              
-              {/* Navigation Menu */}
-              <div className="relative z-10 flex items-center space-x-2">
-                <div className="flex bg-card/60 backdrop-blur-sm rounded-lg p-1 border border-color/30">
-                  <button
-                    onClick={() => setActiveView('terminals')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
-                      activeView === 'terminals' 
-                        ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg' 
-                        : 'text-muted hover:text-white hover:bg-card/50'
-                    }`}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span>Terminales</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveView('kanban')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
-                      activeView === 'kanban' 
-                        ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg' 
-                        : 'text-muted hover:text-white hover:bg-card/50'
-                    }`}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 0a2 2 0 012 2v6a2 2 0 01-2 2" />
-                    </svg>
-                    <span>Kanban</span>
-                  </button>
-                </div>
-                
-                <div className="text-sm text-muted">
-                  Total: {tasks.length} tareas
-                </div>
-                <div className="w-3 h-3 bg-primary rounded-full animate-pulse"></div>
-              </div>
-            </header>
-
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-h-0">
             {/* Main Content Area - Conditional Rendering */}
-            <div className="flex-1 p-6 min-h-0">
+            <div className="flex-1 p-6 pb-12 min-h-0 overflow-auto">
               {activeView === 'terminals' ? (
                 /* Terminals Grid - Beautiful design */
                 <div className="grid grid-cols-2 gap-6 h-full" style={{ height: '600px' }}>
@@ -893,11 +785,40 @@ export default function App() {
                 </div>
               )}
             </div>
+      </div>
 
+      {/* Footer Task Status Bar */}
+      <div className="h-16 bg-card/80 backdrop-blur-xl border-t border-color/30 px-6 py-3 mt-4 overflow-hidden flex-shrink-0">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10"></div>
+        <div className="relative z-10 h-full flex items-center justify-between">
+          <div className="flex items-center space-x-6">
+            {[
+              { status: 'QUEUED', label: 'En Cola', color: 'text-muted' },
+              { status: 'RUNNING', label: 'Ejecutando', color: 'text-secondary' },
+              { status: 'DONE', label: 'Completado', color: 'text-accent' },
+              { status: 'ERROR', label: 'Error', color: 'text-red-400' }
+            ].map(({ status, label, color }) => (
+              <div key={status} className="flex items-center space-x-2">
+                <div className={`w-2 h-2 rounded-full bg-current ${color}`}></div>
+                <span className={`text-sm ${color}`}>
+                  {label}: {tasks.filter(task => task.status === status).length}
+                </span>
+              </div>
+            ))}
           </div>
+          <button
+            onClick={() => setActiveView(activeView === 'terminals' ? 'kanban' : 'terminals')}
+            className="text-sm text-muted hover:text-white transition-colors flex items-center space-x-2"
+          >
+            <span>{activeView === 'terminals' ? 'Ver detalles' : 'Ver terminales'}</span>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
+      </div>
 
-        {/* Beautiful Modal for new session */}
+      {/* Beautiful Modal for new session */}
         {showNewSessionModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-xl flex items-center justify-center z-50">
             <div className="gradient-border w-full max-w-md mx-4">
@@ -1001,39 +922,6 @@ export default function App() {
             </div>
           </div>
         )}
-
-        {/* Footer Task Status Bar */}
-        <div className="h-16 bg-card/80 backdrop-blur-xl border-t border-color/30 px-6 py-3 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10"></div>
-          <div className="relative z-10 h-full flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              {[
-                { status: 'QUEUED', label: 'En Cola', color: 'text-muted' },
-                { status: 'RUNNING', label: 'Ejecutando', color: 'text-secondary' },
-                { status: 'DONE', label: 'Completado', color: 'text-accent' },
-                { status: 'ERROR', label: 'Error', color: 'text-red-400' }
-              ].map(({ status, label, color }) => (
-                <div key={status} className="flex items-center space-x-2">
-                  <div className={`w-2 h-2 rounded-full bg-current ${color}`}></div>
-                  <span className={`text-sm ${color}`}>
-                    {label}: {tasks.filter(task => task.status === status).length}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <button
-              onClick={() => setActiveView(activeView === 'terminals' ? 'kanban' : 'terminals')}
-              className="text-sm text-muted hover:text-white transition-colors flex items-center space-x-2"
-            >
-              <span>{activeView === 'terminals' ? 'Ver detalles' : 'Ver terminales'}</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-      </div>
     </div>
   )
 }
