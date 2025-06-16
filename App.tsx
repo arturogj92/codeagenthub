@@ -226,6 +226,7 @@ export default function App() {
     }
   }
 
+
   const getModeIcon = (mode: string) => {
     switch (mode) {
       case 'plan': return (
