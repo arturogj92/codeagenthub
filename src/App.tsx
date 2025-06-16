@@ -1,18 +1,33 @@
 import React, { useState } from 'react'
-import { KanbanBoard } from './components/KanbanBoard'
-import { ControlPanel } from './components/ControlPanel'
-import { SessionCard } from './components/SessionCard'
+import { Sidebar } from './components/Sidebar'
+import { TerminalGrid } from './components/TerminalGrid'
+import { CompactKanban } from './components/CompactKanban'
+import { NotificationCenter } from './components/NotificationCenter'
 import { SessionDetail } from './components/SessionDetail'
+import { ClaudeConfirmationModal } from './components/ClaudeConfirmationModal'
 import { useSessions, useJobs, useCreateJob } from './hooks/useElectron'
-import { Session } from './types'
+import { useAllPendingConfirmations } from './hooks/useClaudeInteractive'
+import { Session, Job } from './types'
 
 export default function App() {
   const { data: sessions = [] } = useSessions()
   const { data: jobs = [] } = useJobs()
   const createJob = useCreateJob()
+  // Temporarily disabled to avoid errors
+  // const { data: pendingConfirmations = [] } = useAllPendingConfirmations()
+  const pendingConfirmations: any[] = []
   const [selectedSession, setSelectedSession] = useState<Session | null>(null)
   const [showNewJobForm, setShowNewJobForm] = useState<number | null>(null)
   const [newJobPrompt, setNewJobPrompt] = useState('')
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false)
+
+  // Auto-show confirmation modal when confirmations are pending
+  React.useEffect(() => {
+    if (pendingConfirmations.length > 0) {
+      setShowConfirmationModal(true)
+    }
+  }, [pendingConfirmations.length])
 
   const handleCreateJobForSession = (sessionId: number) => {
     setShowNewJobForm(sessionId)
@@ -39,84 +54,68 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-grid-background">
-      {/* Barra superior arrastrable para mover la ventana */}
-      <div className="draggable-header h-12 w-full fixed top-0 left-0 z-50 bg-transparent" />
-
-      <main className="container mx-auto px-6 py-6 pt-14">
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
-          {/* Panel de Control */}
-          <div className="xl:col-span-1 space-y-6">
-            <ControlPanel />
-
-            {/* Sesiones Activas */}
-            {sessions.length > 0 && (
-              <div className="bg-card/90 backdrop-blur-xl border border-color rounded-xl shadow-2xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-                  <svg className="w-5 h-5 text-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                  </svg>
-                  Sesiones Activas ({sessions.length})
-                </h3>
-
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {sessions.map(session => (
-                    <SessionCard
-                      key={session.id}
-                      session={session}
-                      jobs={jobs}
-                      onSelectSession={setSelectedSession}
-                      onCreateJob={handleCreateJobForSession}
-                      isSelected={selectedSession?.id === session.id}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Panel Principal */}
-          <div className="xl:col-span-3">
-            <div className="bg-card/90 backdrop-blur-xl border border-color rounded-xl shadow-2xl p-6 min-h-[600px]">
-              <div className="flex items-center justify-between mb-8 draggable-header">
-                <h2 className="text-2xl font-bold text-white flex items-center">
-                  <svg className="w-6 h-6 text-secondary mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h2a2 2 0 002-2z" />
-                  </svg>
-                  Task Board
-                </h2>
-
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2 text-sm text-muted bg-primary/10 px-3 py-2 rounded-lg border border-primary/20">
-                    <div className="w-2 h-2 bg-secondary rounded-full animate-pulse"></div>
-                    <span>Auto-refresh: 2s</span>
-                  </div>
-
-                  <div className="text-sm text-muted bg-accent/10 px-3 py-2 rounded-lg border border-accent/20">
-                    Total Jobs: {jobs.length}
-                  </div>
-                </div>
-              </div>
-
-              <KanbanBoard />
+    <div className="min-h-screen bg-grid-background flex">
+      {/* Sidebar plegable */}
+      <div className={`transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-80'} flex-shrink-0`}>
+        <Sidebar 
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          sessions={sessions}
+          jobs={jobs}
+          onCreateJob={handleCreateJobForSession}
+          onSelectSession={setSelectedSession}
+          selectedSession={selectedSession}
+        />
+      </div>
+      
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header with notifications */}
+        <header className="h-16 bg-card/80 backdrop-blur-xl border-b border-color flex items-center justify-between px-6">
+          <div className="flex items-center space-x-4">
+            <h1 className="text-xl font-bold text-white">CodeAgent Hub</h1>
+            <div className="flex items-center space-x-2 text-sm text-muted">
+              <div className="w-2 h-2 bg-secondary rounded-full animate-pulse"></div>
+              <span>{jobs.filter((j: Job) => j.status === 'RUNNING').length} en ejecución</span>
             </div>
           </div>
+          <div className="flex items-center space-x-4">
+            {/* Confirmation Alert */}
+            {pendingConfirmations.length > 0 && (
+              <button
+                onClick={() => setShowConfirmationModal(true)}
+                className="flex items-center space-x-2 px-3 py-2 bg-yellow-500/20 border border-yellow-500/30 rounded-lg text-yellow-400 hover:bg-yellow-500/30 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.728-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <span className="text-sm font-medium">
+                  {pendingConfirmations.length} Confirmation{pendingConfirmations.length !== 1 ? 's' : ''}
+                </span>
+                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+              </button>
+            )}
+            <NotificationCenter jobs={jobs} />
+          </div>
+        </header>
+        
+        {/* Main grid area - Terminales */}
+        <div className="flex-1 p-4 min-h-0 bg-background/50">
+          <TerminalGrid sessions={sessions} />
         </div>
-
-        {/* Efectos de fondo */}
-        <div className="fixed inset-0 pointer-events-none -z-10">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl opacity-30"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/20 rounded-full blur-3xl opacity-30"></div>
-          <div className="absolute top-3/4 left-1/2 w-96 h-96 bg-accent/20 rounded-full blur-3xl opacity-20"></div>
+        
+        {/* Bottom area - Kanban compacto */}
+        <div className="h-64 border-t border-color bg-card/50 backdrop-blur-sm">
+          <CompactKanban jobs={jobs} />
         </div>
-      </main>
+      </div>
 
       {/* Modal para crear job */}
       {showNewJobForm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-card border border-color rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
             <h3 className="text-lg font-semibold text-white mb-4">Nueva Tarea</h3>
-
+            
             <form onSubmit={handleSubmitJob} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-muted mb-2">
@@ -131,7 +130,7 @@ export default function App() {
                   required
                 />
               </div>
-
+              
               <div className="flex space-x-3">
                 <button
                   type="submit"
@@ -161,6 +160,12 @@ export default function App() {
           onClose={() => setSelectedSession(null)}
         />
       )}
+
+      {/* Claude Confirmation Modal */}
+      <ClaudeConfirmationModal
+        isOpen={showConfirmationModal}
+        onClose={() => setShowConfirmationModal(false)}
+      />
     </div>
   )
 }

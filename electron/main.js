@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
 // Import server modules
-import { setupDatabase } from '../server/db/database.js';
+// import { setupDatabase } from '../server/db/database.js'; // Temporarily disabled - better-sqlite3 version issue
 import { setupIpcHandlers } from '../server/ipc-handlers.js';
 import { tmuxManager } from '../server/tmux-manager.js';
 
@@ -73,6 +73,14 @@ function createWindow() {
   mainWindow.once('ready-to-show', () => {
     console.log('Window ready to show - setting up API injection');
     mainWindow.show();
+    mainWindow.focus(); // Force focus
+    mainWindow.moveTop(); // Bring to front
+    app.focus(); // Focus the app
+    
+    // Log window state
+    console.log('Window visible:', mainWindow.isVisible());
+    console.log('Window minimized:', mainWindow.isMinimized());
+    console.log('Window maximized:', mainWindow.isMaximized());
     
     // Inject API directly using IPC
     setTimeout(() => {
@@ -158,6 +166,19 @@ function createWindow() {
     `);
   });
 
+  // Add error handling for renderer process crashes
+  mainWindow.webContents.on('crashed', (event) => {
+    console.error('Renderer process crashed:', event);
+  });
+
+  mainWindow.webContents.on('unresponsive', () => {
+    console.error('Renderer process became unresponsive');
+  });
+
+  mainWindow.webContents.on('responsive', () => {
+    console.log('Renderer process became responsive again');
+  });
+
   // Handle window closed
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -168,16 +189,16 @@ function createWindow() {
 app.whenReady().then(async () => {
   try {
     // Initialize database
-    await setupDatabase();
-    console.log('Database initialized');
+    // await setupDatabase(); // Temporarily disabled - better-sqlite3 version issue
+    console.log('Database initialization skipped (compatibility issue)');
 
     // Initialize tmux manager
     await tmuxManager.ensureSetup();
     console.log('Tmux manager initialized');
 
     // Setup IPC handlers
-    setupIpcHandlers();
-    console.log('IPC handlers setup');
+    // setupIpcHandlers(); // Temporarily disabled - depends on database
+    console.log('IPC handlers setup skipped (database dependency)');
 
     // Create main window
     createWindow();

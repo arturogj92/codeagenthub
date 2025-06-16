@@ -1,7 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Session } from '../types'
-import { ImagePasteTerminal } from './ImagePasteTerminal'
-import { ImageData } from '../hooks/useImagePaste'
 
 interface TerminalGridProps {
   sessions: Session[]
@@ -13,10 +11,10 @@ interface TerminalWindowProps {
   index: number
   onClose: () => void
   onResize: (width: number, height: number) => void
-  onSendPrompt?: (prompt: string, images?: ImageData[]) => void
 }
 
-function TerminalWindow({ session, claudeSessionId, index, onClose, onResize, onSendPrompt }: TerminalWindowProps) {
+function TerminalWindow({ session, claudeSessionId, index, onClose, onResize }: TerminalWindowProps) {
+  const [input, setInput] = useState('')
   const [isMinimized, setIsMinimized] = useState(false)
   const terminalRef = useRef<HTMLDivElement>(null)
   
@@ -40,16 +38,14 @@ function TerminalWindow({ session, claudeSessionId, index, onClose, onResize, on
     }
   }, [output])
 
-  const handleSendCommand = (prompt: string, images?: ImageData[]) => {
-    if (onSendPrompt) {
-      onSendPrompt(prompt, images)
-    } else {
-      // Fallback para demo
-      setOutput(prev => prev + `$ ${prompt}\n`)
-      if (images && images.length > 0) {
-        setOutput(prev => prev + `📎 ${images.length} imagen(es) adjunta(s)\n`)
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      if (input.trim()) {
+        // Simulate command execution
+        setOutput(prev => prev + `$ ${input}\n`)
+        console.log('Command executed:', input)
       }
-      console.log('Command executed:', prompt, 'Images:', images?.length || 0)
+      setInput('')
     }
   }
 
@@ -122,11 +118,14 @@ function TerminalWindow({ session, claudeSessionId, index, onClose, onResize, on
           </div>
 
           {/* Terminal Input */}
-          <div className="px-3 py-2 bg-gray-900 border-t border-gray-700">
-            <ImagePasteTerminal
-              terminalId={session.id}
-              disabled={!claudeSessionId}
-              onSendPrompt={handleSendCommand}
+          <div className="flex items-center px-3 py-2 bg-gray-900 border-t border-gray-700">
+            <span className="text-green-400 font-mono text-sm mr-2">$</span>
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="flex-1 bg-transparent text-green-400 font-mono text-sm outline-none"
               placeholder="Enter command for terminal..."
             />
           </div>
